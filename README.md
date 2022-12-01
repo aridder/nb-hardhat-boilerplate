@@ -2,7 +2,11 @@
 
 The tests are with these configuration makes "a copy" of the external blockchain from the RPC_URL provided. These lets you play with the current state in your tests.
 
-Create a `.env.local` file from the `.env.example`. You need a RPC-url with basic authentication and address for NOK(CBToken) contract and your own token. Those are used in the tests
+Create a `.env.local` file from the `.env.example`. You need these to run the tests 
+- `RPC_URL`: Url to the RPC with basic authentication
+- `NOK_ADDRESS`: address to the NOK(CBToken) contract 
+- `ME_ADDRESS`: Your address or anyone else. (user to fetch balanceOf of the address)
+- `WHALE_ADDRESS`: Address of someone you categorize as a "Whale" in the NOK contract. Used to transfer NOK to you if you want more 💰
 
 `./contracts` contains CBContract.sol which is the actual contract for NOK token.
 
