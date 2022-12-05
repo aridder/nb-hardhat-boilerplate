@@ -50,11 +50,13 @@ export const setup = async (contractPath: ContractPath) => {
     contractPath,
     config.NOK_ADDRESS!
   );
+
   await impersonate(config.ME_ADDRESS, config.WHALE_ADDRESS);
 
   // generating helper methods
   const transfer = _transfer(contract);
   const getBalance = _getBalance(contract);
+
   return { config, contract, transfer, getBalance };
 };
 
