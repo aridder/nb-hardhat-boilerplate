@@ -58,7 +58,7 @@ export const setup = async (contractPath: ContractPath) => {
   return { config, contract, transfer, getBalance };
 };
 
-export const setupCBContract = () => setup("contracts/CBContract.sol:CBToken");
+export const setupNOKToken = () => setup("contracts/CBContract.sol:CBToken");
 
 type DeployedContract = "TokenLock"; // | "More" | "In" | "The" | "Future"
 export const getDeployedContract = async (

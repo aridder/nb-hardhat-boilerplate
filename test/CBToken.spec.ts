@@ -1,11 +1,9 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "chai";
-import { setup } from "./test-utils";
+import { setupNOKToken } from "./test-utils";
 
 describe("CBContract", async () => {
-  const { getBalance, transfer, config } = await setup(
-    "contracts/CBContract.sol:CBToken"
-  );
+  const { getBalance, transfer, config } = await setupNOKToken();
 
   describe("Transfer", () => {
     it("can access both accounts", async () => {
@@ -35,7 +33,7 @@ describe("CBContract", async () => {
     it("increases the receiver balance when transferring", async () => {
       const [before] = await getBalance(config.ME_ADDRESS);
 
-      const amount = 1;
+      const amount = faker.datatype.number();
       await transfer({
         amount,
         sender: config.WHALE_ADDRESS,

@@ -1,11 +1,12 @@
 import { expect } from "chai";
-import { getDeployedContract, setupCBContract } from "./test-utils";
+import { ethers } from "hardhat";
+import { getDeployedContract, setupNOKToken } from "./test-utils";
 
 describe("TokenLock", async () => {
   describe("Inner thing", () => {
     it("should revert with NotSupported() if one the unsupported ERC-20 functions is called", async () => {
       const tokenLock = await getDeployedContract("TokenLock");
-      const { config } = await setupCBContract();
+      const { config } = await setupNOKToken();
 
       await expect(
         tokenLock.allowance(config.ME_ADDRESS, config.ME_ADDRESS)
@@ -22,7 +23,7 @@ describe("TokenLock", async () => {
     });
 
     it("sets the owner and stores the provided arguments", async () => {
-      const { contract: cbContract } = await setupCBContract();
+      const { contract: cbContract } = await setupNOKToken();
       const tokenLock = await getDeployedContract("TokenLock");
 
       expect(await tokenLock.token()).to.equal(cbContract.address);
@@ -32,11 +33,16 @@ describe("TokenLock", async () => {
     });
 
     it("emits a Transfer event", async () => {
-      const { config, contract: cbContract } = await setupCBContract();
+      const { config, transfer, contract: nokToken } = await setupNOKToken();
+      await transfer({
+        amount: 100,
+        sender: config.WHALE_ADDRESS,
+        receiver: config.ME_ADDRESS,
+      });
       const tokenLockContract = await getDeployedContract("TokenLock");
 
-      await cbContract
-        .connect(config.ME_ADDRESS)
+      await nokToken
+        .connect(await ethers.getSigner(config.ME_ADDRESS))
         .approve(tokenLockContract.address, 10);
 
       await expect(tokenLockContract.connect(config.ME_ADDRESS).deposit(10))
