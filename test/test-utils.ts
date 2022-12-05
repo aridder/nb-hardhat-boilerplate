@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { ethers, network } from "hardhat";
 
-const _getEtherConfig = () => {
+const getEtherConfig = () => {
   const { NOK_ADDRESS, ME_ADDRESS, WHALE_ADDRESS } = process.env;
 
   if (!NOK_ADDRESS || !ME_ADDRESS || !WHALE_ADDRESS) {
@@ -10,6 +10,16 @@ const _getEtherConfig = () => {
 
   return { NOK_ADDRESS, ME_ADDRESS, WHALE_ADDRESS };
 };
+
+const impersonate = (...accounts: string[]) =>
+  Promise.all(
+    accounts.map((account) =>
+      network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [account],
+      })
+    )
+  );
 
 const _transfer =
   (contract: Contract) =>
@@ -33,32 +43,17 @@ const _getBalance =
 
 type ContractPath = `contracts/${string}.sol:${string}`;
 export const generateUtils = async (contractPath: ContractPath) => {
-  const config = _getEtherConfig();
+  const config = getEtherConfig();
 
   // setting up local blockchain stuff
   const contract = await ethers.getContractAt(
     contractPath,
     config.NOK_ADDRESS!
   );
-
   await impersonate(config.ME_ADDRESS, config.WHALE_ADDRESS);
-
-  await network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [config.ME_ADDRESS],
-  });
 
   // generating helper methods
   const transfer = _transfer(contract);
   const getBalance = _getBalance(contract);
   return { config, transfer, getBalance };
 };
-const impersonate = (...accounts: string[]) =>
-  Promise.all(
-    accounts.map((account) =>
-      network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [account],
-      })
-    )
-  );
