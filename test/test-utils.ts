@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { ethers, network } from "hardhat";
+import { deployments, ethers, network } from "hardhat";
 
 const getEtherConfig = () => {
   const { NOK_ADDRESS, ME_ADDRESS, WHALE_ADDRESS } = process.env;
@@ -55,5 +55,16 @@ export const setup = async (contractPath: ContractPath) => {
   // generating helper methods
   const transfer = _transfer(contract);
   const getBalance = _getBalance(contract);
-  return { config, transfer, getBalance };
+  return { config, contract, transfer, getBalance };
+};
+
+export const setupCBContract = () => setup("contracts/CBContract.sol:CBToken");
+
+type DeployedContract = "TokenLock"; // | "More" | "In" | "The" | "Future"
+export const getDeployedContract = async (
+  name: DeployedContract
+): Promise<Contract> => {
+  await deployments.fixture(name);
+  const deployment = await deployments.get(name);
+  return ethers.getContractAt(deployment.abi, deployment.address);
 };
