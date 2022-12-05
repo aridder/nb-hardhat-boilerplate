@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "chai";
-import { generateUtils } from "./test-utils";
+import { setup } from "./test-utils";
 
 describe("CBContract", async () => {
-  const { getBalance, transfer, config } = await generateUtils(
+  const { getBalance, transfer, config } = await setup(
     "contracts/CBContract.sol:CBToken"
   );
 

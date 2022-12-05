@@ -42,7 +42,7 @@ const _getBalance =
     );
 
 type ContractPath = `contracts/${string}.sol:${string}`;
-export const generateUtils = async (contractPath: ContractPath) => {
+export const setup = async (contractPath: ContractPath) => {
   const config = getEtherConfig();
 
   // setting up local blockchain stuff
