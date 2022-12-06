@@ -1,52 +1,71 @@
-import { ethers, network } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { CBToken } from "../typechain";
+import { faker } from "@faker-js/faker";
+import { expect } from "chai";
+import { setupNOKToken } from "./test-utils";
 
-const NOK_ADDRESS = process.env.NOK_ADDRESS;
-const me = process.env.ME_ADDRESS;
-const whale = process.env.WHALE_ADDRESS;
-
-if (!NOK_ADDRESS || !me || !whale) {
-  throw new Error("Missing env variables");
-}
-
-describe("CBContract", function () {
-  let cbToken: CBToken;
-  before(async function () {
-    cbToken = await ethers.getContractAt(
-      "contracts/CBContract.sol:CBToken",
-      NOK_ADDRESS!
-    );
-  });
-  describe("Balance", () => {
-    it("should return the balance of the account", async () => {
-      const balance2 = await cbToken.balanceOf(whale);
-      console.log(balance2.toString());
-
-      // need to change the variable of "me" before printing the balance
-      // const balance = await cbToken.balanceOf(me);
-      // console.log(balance.toString());
-    });
-  });
+describe("CBContract", async () => {
+  const { getBalance, transfer, config } = await setupNOKToken();
 
   describe("Transfer", () => {
-    let whaleSigner: SignerWithAddress;
-    before(async () => {
-      whaleSigner = await ethers.provider.getSigner(whale);
-      await network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [whale],
-      });
+    it("can access both accounts", async () => {
+      const [myAccount, whaleAccount] = await getBalance(
+        config.ME_ADDRESS,
+        config.WHALE_ADDRESS
+      );
+      expect(myAccount).not.to.be.undefined;
+      expect(whaleAccount).not.to.be.undefined;
     });
-    it("should transfer tokens", async () => {
-      const balanceBefore = await cbToken.balanceOf(whale);
-      console.log("Balnce in ether", ethers.utils.formatEther(balanceBefore));
-      console.log(balanceBefore.toString());
 
-      const tx = await cbToken.connect(whaleSigner).transfer(me, 1);
-      await tx.wait();
-      const balance = await cbToken.balanceOf(whale);
-      console.log(balance.toString());
+    it("decreases sender balance when transferring", async () => {
+      const [before] = await getBalance(config.WHALE_ADDRESS);
+
+      const amount = faker.datatype.number();
+      await transfer({
+        amount,
+        sender: config.WHALE_ADDRESS,
+        receiver: config.ME_ADDRESS,
+      });
+
+      const [after] = await getBalance(config.WHALE_ADDRESS);
+
+      expect(after).to.equal(before - amount);
+    });
+
+    it("increases the receiver balance when transferring", async () => {
+      const [before] = await getBalance(config.ME_ADDRESS);
+
+      const amount = faker.datatype.number();
+      await transfer({
+        amount,
+        sender: config.WHALE_ADDRESS,
+        receiver: config.ME_ADDRESS,
+      });
+
+      const [after] = await getBalance(config.ME_ADDRESS);
+
+      expect(after).to.equal(before + amount);
+    });
+
+    it("Does not transfer if sender does not have the funds available", async () => {
+      const [meBefore, whaleBefore] = await getBalance(
+        config.ME_ADDRESS,
+        config.WHALE_ADDRESS
+      );
+      expect(
+        transfer({
+          amount: meBefore + 1, //i.e. more than is available
+          sender: config.ME_ADDRESS,
+          receiver: config.WHALE_ADDRESS,
+        })
+      ).rejectedWith(Error);
+
+      const [meAfter, whaleAfter] = await getBalance(
+        config.ME_ADDRESS,
+        config.WHALE_ADDRESS
+      );
+
+      //i.e. no change
+      expect(meAfter).equal(meBefore);
+      expect(whaleAfter).equal(whaleBefore);
     });
   });
 });
